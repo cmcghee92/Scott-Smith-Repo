@@ -1,0 +1,1 @@
+Get-Service -Name BITS | Where-Object {$_.Status -eq 'Stopped' }
