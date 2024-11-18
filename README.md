@@ -1,3 +1,2 @@
 # PowerShell
-Projects
-Scott Smith
+Projects: Scott Smith
