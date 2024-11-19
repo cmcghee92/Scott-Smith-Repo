@@ -19,7 +19,7 @@ foreach ($user in $users) {
 			if ($lastlogon -eq $null) {
 					$lastlogon = "Never Logged In"
 					$status = "Inactive"
-				} elseif ((get-date) - $lastlogon -gt (New-timespan -days $inactivitythreshold) {
+				} elseif ((get-date) - $lastlogon -gt (New-timespan -days $inactivitythreshold)) {
 					$status = "Inactive"
 				}
 		$reportcontent += "Username: $username"

@@ -31,6 +31,7 @@ foreach ($servicename in $servicestomonitor) {
 		}
 		$logcontent += "-----------------------------------------"
 	}
+}
 $logcontent -join "`n" | out-file -FilePath $logpath
 Write-Output "Service Health Check Report generated at $logpath"
 		
