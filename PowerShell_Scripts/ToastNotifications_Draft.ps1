@@ -15,7 +15,7 @@ try {
 } Catch {
     Write-Output "Cannot load Windows Runtime Classes. Please ensure that you are using Windows 10/11 System."
 }
-$NotificationTemplate = [xml]@"
+$NotificationTemplate = @"
 <toast scenario="$Type">
     <visual>
             <binding template="ToastGeneric">
@@ -25,8 +25,9 @@ $NotificationTemplate = [xml]@"
     </visual>
 <actions>
     <action content="Play" activationType="protocol" arguments="C:\Windows\Media\Alarm01.wav" />
-    <action content="Open Folder" activationType="protocol" arguements="file:///C:/Windows/Media" />
+    <action content="Open Folder" activationType="protocol" arguments="file:///C:/Windows/Media" />
 </actions>
+</toast>
 "@
 $Documentxml = [Windows.Data.Xml.Dom.XmlDocument]::new()
 $Documentxml.LoadXml($NotificationTemplate)
