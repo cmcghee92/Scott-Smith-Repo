@@ -1,0 +1,32 @@
+#User Account Audit and Reporting
+#List all user accounts: Gather username, last login date, account status
+#Identify Inactive Accounts: Check for accounts that haven't been used in 60 days and mark them as disabled
+#Generate a Report: Save audit log file
+$users = get-aduser -filter * -properties *
+$inactivitythreshold = 60
+$reportpath = "C:\Reports\UserAccountAudit_$(get-date -format 'yyyyMMdd').txt"
+$reportcontent = @(
+		"User Account Audit Report - $(get-date)",
+		"---------------------------------------",
+		"Threshold for Inactivity: $inactivitythreshold",
+		""
+)
+foreach ($user in $users) {
+		$username = $user.name
+		$enabled = $user.Enabled
+		$lastlogon = $user.lastlogon
+		$status = "Active"
+			if ($lastlogon -eq $null) {
+					$lastlogon = "Never Logged In"
+					$status = "Inactive"
+				} elseif ((get-date) - $lastlogon -gt (New-timespan -days $inactivitythreshold) {
+					$status = "Inactive"
+				}
+		$reportcontent += "Username: $username"
+		$reportcontent += "Status: $status"
+		$reportcontent += "Enabled: $enabled"
+		$reportcontent += "Last Logon: $lastlogon"
+		$reportcontent += "---------------------------------------"
+}
+$reportcontent -join "`n" | Out-file -filepath $reportpath
+Write "User account audit report generated at $reportpath"
