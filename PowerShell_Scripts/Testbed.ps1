@@ -1,26 +1,46 @@
-param (
-    [Parameter(Mandatory=$true)]
+[CmdletBinding()]
+Param (
+    [string]$appid = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe',
+    [string]$NotificationImage,
+    [Parameter(Mandatory)]
+    [string]$Title,
+    [Parameter(Mandatory)]
     [string]$Message,
-
-    [Parameter(Mandatory=$false)]
-    [string]$ImagePath
+    [ValidateSet('alarm', 'reminder', 'incomingcall', 'default')]
+    [string]$Type = 'default'
 )
-$ToastXml = @"
-<toast>
+try {
+    $null = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
+    $null = [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]
+} Catch {
+    Write-Output "Cannot load Windows Runtime Classes. Please ensure that you are using Windows 10/11 System."
+}
+$imageplacementpath = "C:\Users\Bill Microsoft\Pictures\Emoji Farm\DK.png"
+#Adding Base Registry Keys Needed for Custom Manipulation\
+$NotificationTemplate = @"
+<toast scenario="$Type">
     <visual>
-        <binding template="ToastGeneric">
-            <text>$Message</text>
-            $(if ($ImagePath) { "<image placement='appLogoOverride' src='$ImagePath'/>" })
-        </binding>
+            <binding template="ToastGeneric">
+                <text>$Title</text>
+                <text>$Message</text>
+                <image placement="appLogoOverride" hint-crop="circle" src="$imageplacementpath"/>
+            </binding>
     </visual>
+<actions>
+    <action content="Play" activationType="protocol" arguments="C:\Windows\Media\Alarm01.wav" />
+    <action content="Show Folder" activationType="protocol" arguments="file:///C:/Windows/Media" />
+</actions>
 </toast>
 "@
-$Template = ([Windows.Data.Xml.Dom.XmlDocument]).new($ToastXml)
-$Template.LoadXml($ToastXml)
+$Documentxml = [Windows.Data.Xml.Dom.XmlDocument]::new()
+$Documentxml.LoadXml($NotificationTemplate)
+$CurrentToast = [Windows.UI.Notifications.ToastNotification]::new($Documentxml)
+$Notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($appid)
 
-# Get the toast notification manager for the current user
-$Notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($AppId)
-$Notification = [Windows.UI.Notifications.ToastNotification]::new($Template)
-
-# Show the toast notification
-$Notifier.Show($Notification)
+try {
+    $notifier.Show($CurrentToast)
+    Write-Host "Toast Notification Sent Successfully." -ForegroundColor Green
+} Catch {
+    Write-Host "Error Sending Notification. Please Troubleshoot."
+    Exit 1
+}
