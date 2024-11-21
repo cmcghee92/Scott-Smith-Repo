@@ -3,17 +3,17 @@
 function Write-Log {
     param([string]$message)
     $timestamp = Get-Date -Format "yyyyMMdd HH:mm:ss"
-    "$timestamp - $message" | Out-File -FilePath "env:TEMP\SysAdLog.txt" -Append
+    "$timestamp - $message" | Out-File -FilePath "$env:TEMP\SysAdLog.txt" -Append
 }
-#Create Path *(Broken)
-if (!(test-path -Path "env:TEMP\SysAdLog.txt")) {
-    New-Item -Path "env:TEMP\SysAdLog.txt" -Force
+#Create Path 
+if ((test-path -Path "$env:TEMP\SysAdLog.txt")) {
+    New-Item -Path "$env:TEMP\SysAdLog.txt" -Force
 }
 
 Write-Log "Script started"
 
 #General System Info
-$computerinfo = Get-ComputerInfo -
+$computerinfo = Get-ComputerInfo
 Write-Log "Computer Name: $($computerinfo.csname)"
 Write-Log "OS Version: $($computerinfo.Osversion)"
 
@@ -34,11 +34,10 @@ foreach ($disk in $disks) {
 #List Recent Window's Updates
 $recentupdates = Get-HotFix | sort InstalledOn -Descending | select -First 5
 foreach ($update in $recentupdates) {
-
-    Write-Log "Windows Update $($update.HotifixID) installed on $($update.DeviceID)"
+    Write-Log "Windows Update $($update.HotfixID) installed on $($update.InstalledOn)"
 }
 
-#Verify Internet Connectivity *(Broken)
+#Verify Internet Connectivity
 $testconnection = Test-NetConnection -ComputerName "www.google.com" -InformationLevel Quiet
 if ($testconnection) {
     Write-Log "Internet connection is active"
@@ -46,10 +45,17 @@ if ($testconnection) {
     Write-Log "No connection detected. Verify configuration"
 }
 
-#List active network connections
+#List active network connections *(Needs to Be Spruced Up)
 $activeconnections = Get-NetTCPConnection | where state -eq 'Established'
-Write-Log "Active Connections: $($activeconnections | select LocalPort, RemoteAddress, RemotePort | ft)"
-
+if ($activeconnections) {
+    Write-Log "Active Connections:"
+     foreach ($connection in $activeconnections | Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort | Sort-Object LocalAddress) {
+        Write-Log " LocalAddress: $($connection.LocalAddress), LocalPort: $($connection.LocalPort), RemoteAddress: $($connection.RemoteAddress), RemotePort: $($connection.RemotePort)"
+     }
+} else {
+    Write-Log "No Active Connections."
+}
+#if (activeconnections) {activeconnections | foreach-object { $_.LocalAddress, $_.LocalPort, $_.RemoteAddress, $_.RemotePort} | Sort-Object -Property LocalAddress})
 #Check Firewall Status
 $firewallstatus = Get-NetFirewallProfile | select Name, Enabled
 foreach ($rule in $firewallstatus) {
@@ -57,4 +63,4 @@ foreach ($rule in $firewallstatus) {
 }
 Write-Log "Script Complete"
 
-Get-content "env:TEMP\SysAdLog.txt"
+Get-content "$env:TEMP\SysAdLog.txt"
