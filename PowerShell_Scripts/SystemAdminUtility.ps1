@@ -1,4 +1,4 @@
-#System Admin Utility Script
+#System Admin Utility Script : Day 49
 
 function Write-Log {
     param([string]$message)
